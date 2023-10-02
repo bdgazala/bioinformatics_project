@@ -1,40 +1,50 @@
+import sys, getopt
 import time
-import numpy as np
 import gzip
+import collections
+import matplotlib.pyplot as plt
 
-def count_elements(seq) -> dict:
-    hist={}
-    for i in seq:
-        hist[i]=hist.get(i,0)+1
-    return hist
+all_col = collections.Counter()
 
-def ascii_histogram(seq) ->None:
-    counted = count_elements(seq)
-    # print(counted)
-    return counted
-    # for k in sorted(counted):
-    #     print (f'K: {k} count{counted[k]}')
 
-def read_file():
+def read_file(file_name):
     start = time.time()
     count = 0
-    f = gzip.open("GCA_000001405.29.fasta.gz", 'r')
-    # with gzip.open("GCA_000001405.29.fasta"+"GCA_000001405.29.fasta", 'r') as file:
-    all_hist={}
+    is_string = 0
+    if (file_name.find('.gz') != -1):
+        f = gzip.open(file_name, 'r')
+    else:
+        f = open(file_name)
+        is_string = 1
+
     for line in f:
         # print(line)
-        count = count + 1
-        c1 = ascii_histogram(line)
-        c2 = all_hist.copy()
-        all_hist = {key: c1.get(key, 0) + c2.get(key, 0) for key in set(c1) | set(c2)}
-        if(count%10000==0):
-            end = time.time()
-            print(f'count{count} persintage:{int(100*count/51e6)} spend time: {int(end-start)}')
+        if (is_string == 0):
+            line_s = str(line, encoding='utf-8')
+        else:
+            line_s = line
 
+        if (line_s[0] == ">"):
+            print(line_s)
+            continue
+        count = count + 1
+        hi = collections.Counter(line_s)
+        all_col.update(hi)
+        if (count % 500000 == 0):
+            end = time.time()
+            print(f'read line: {count} persintage:{int(100 * count / 51e6)}% spend time: {int(end - start)}')
+            # break
+    all_col.pop("\n")  # remove new line from dict
     end = time.time()
-    print(all_hist)
-    print("Execution time in seconds: ",(end-start))
-    print("No of lines printed: ",count)
+    '''plot the data'''
+    gen_name = list(all_col.keys())
+    gen_vale = list(all_col.values())
+    plt.bar(range(len(all_col)), gen_vale, tick_label=gen_name)
+    plt.show()
+    '''print result'''
+    print(all_col)
+    print("Execution time in seconds: ", (end - start))
+    print("No of lines printed: ", count)
 
 
 def print_hi(name):
@@ -44,9 +54,14 @@ def print_hi(name):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('DR:Read "File GCA_000001405.29.fasta.gz"')
-    read_file()
 
+    file_name = "GCA_000001405.29.fasta.gz"
+    opts, args = getopt.getopt(sys.argv[1:], '', ['file'])
+    print(args)
+    try:
+        file_name = args[0]
 
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    except:
+        file_name = "GCA_000001405.29.fasta.gz"
+    print_hi('doc Read' + file_name)
+    read_file(file_name)
