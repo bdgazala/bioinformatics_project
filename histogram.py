@@ -55,6 +55,7 @@ def print_hi(name):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
+    print("you must inter an arg the file name *.gz or *.fasta")
     file_name = "GCA_000001405.29.fasta.gz"
     opts, args = getopt.getopt(sys.argv[1:], '', ['file'])
     print(args)
